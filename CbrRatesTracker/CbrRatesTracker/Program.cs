@@ -15,6 +15,8 @@ namespace CbrRatesTracker
             try
             {
                 Log.Information("Starting web host");
+                
+                System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
 
                 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,8 +27,11 @@ namespace CbrRatesTracker
                 builder.Services.AddControllers();
                 builder.Services.AddOpenApi();
                 builder.Services.AddSwaggerGen();
+                
                 builder.Services.AddDbContext<Data.AppDbContext>(options =>
                     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+                
+                builder.Services.AddHttpClient<CbrIntegration.CbrClientService>();
 
                 var app = builder.Build();
 
