@@ -14,9 +14,10 @@ namespace CbrRatesTracker.Models
 
         private ExchangeRate() { }
 
-        public ExchangeRate(int currencyId, DateOnly date, int nominal, decimal value)
+        public ExchangeRate(Currency currency, DateOnly date, int nominal, decimal value)
         {
-            CurrencyId = currencyId;
+            CurrencyId = currency.Id;
+            Currency = currency;
             Date = date;
             Nominal = nominal;
             Value = value;
