@@ -32,6 +32,7 @@ namespace CbrRatesTracker
                     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
                 
                 builder.Services.AddHttpClient<CbrIntegration.CbrClientService>();
+                builder.Services.AddScoped<Services.ExchangeRateUpdateService>();
 
                 var app = builder.Build();
 

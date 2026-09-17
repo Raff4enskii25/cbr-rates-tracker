@@ -1,6 +1,7 @@
 ﻿using System.Net.Http;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
+using System.Globalization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
    
@@ -8,9 +9,9 @@ namespace CbrRatesTracker.CbrIntegration
 {
     public class CbrClientService
     {
-        public readonly HttpClient _httpClient;
+        private readonly HttpClient _httpClient;
         private readonly ILogger<CbrClientService> _logger;
-        public readonly string _xmlDailyUrl;
+        private readonly string _xmlDailyUrl;
 
         public CbrClientService(HttpClient httpClient, IConfiguration configuration, ILogger<CbrClientService> logger)
         {
@@ -19,7 +20,7 @@ namespace CbrRatesTracker.CbrIntegration
             _xmlDailyUrl = configuration.GetValue<string>("Cbr:XmlDailyUrl");
         }
 
-        public async Task GetLatestRatesAsync()
+        public async Task<List<ValuteDTO>> GetLatestRatesAsync()
         {
             try
             {
@@ -32,7 +33,17 @@ namespace CbrRatesTracker.CbrIntegration
                 using var reader = new StringReader(xml);
                 var valCurs = (ValCurs)serializer.Deserialize(reader);
 
-                _logger.LogInformation($"{valCurs.Date}");
+                var valuteDTOs = new List<ValuteDTO>();
+                valuteDTOs.AddRange(valCurs.Valutes.Select(valute => new ValuteDTO(
+                    valute.CharCode,
+                    int.Parse(valute.NumCode),
+                    int.Parse(valute.Nominal),
+                    valute.Name,
+                    decimal.Parse(valute.Value.Replace(',', '.'), CultureInfo.InvariantCulture),
+                    DateOnly.Parse(valCurs.Date, CultureInfo.GetCultureInfo("ru-RU"))
+                )));
+                
+                return valuteDTOs;
             }
 
             catch(HttpRequestException ex)
@@ -47,7 +58,7 @@ namespace CbrRatesTracker.CbrIntegration
                 throw;
             }
 
-            catch (Exception ex)
+            catch(Exception ex)
             {
                 _logger.LogError(ex, "Unexpected error occurred.");
                 throw;
