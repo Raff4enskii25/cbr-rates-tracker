@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CbrRatesTracker.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260912193243_InitialCreate")]
+    [Migration("20260917085418_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -69,9 +69,6 @@ namespace CbrRatesTracker.Migrations
                     b.Property<string>("CharCode")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
 
                     b.Property<string>("Name")
                         .IsRequired()

@@ -9,16 +9,14 @@ namespace CbrRatesTracker.Models
         public string CharCode { get; private set; }
         public int NumCode { get; private set; }
         public string Name { get; private set; }
-        public bool IsActive { get; private set; }
 
         private Currency() { }
 
-        public Currency(string charCode, int numCode, string name, bool isActive)
+        public Currency(string charCode, int numCode, string name)
         {
             CharCode = charCode;
             NumCode = numCode;
             Name = name;
-            IsActive = isActive;
         }
     }
 }

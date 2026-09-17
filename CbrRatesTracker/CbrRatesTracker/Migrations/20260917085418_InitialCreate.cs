@@ -20,8 +20,7 @@ namespace CbrRatesTracker.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     CharCode = table.Column<string>(type: "text", nullable: false),
                     NumCode = table.Column<int>(type: "integer", nullable: false),
-                    Name = table.Column<string>(type: "text", nullable: false),
-                    IsActive = table.Column<bool>(type: "boolean", nullable: false)
+                    Name = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
