@@ -34,6 +34,8 @@ namespace CbrRatesTracker
                 builder.Services.AddHttpClient<CbrIntegration.CbrClientService>();
                 builder.Services.AddScoped<Services.ExchangeRateUpdateService>();
 
+                builder.Services.AddHostedService<BackgroundJobs.ExchangeRateUpdateJob>();
+
                 var app = builder.Build();
 
                 app.UseSerilogRequestLogging();
