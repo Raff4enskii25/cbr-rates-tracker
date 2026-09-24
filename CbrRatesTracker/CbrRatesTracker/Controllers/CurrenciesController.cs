@@ -1,11 +1,10 @@
 ﻿using CbrRatesTracker.Data;
 using CbrRatesTracker.DTO;
 using CbrRatesTracker.Models;
+using CbrRatesTracker.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Globalization;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace CbrRatesTracker.Controllers
 {
@@ -14,10 +13,12 @@ namespace CbrRatesTracker.Controllers
     public class CurrenciesController : ControllerBase
     {
         private readonly AppDbContext _dbContext;
+        private readonly ExchangeRateQueryService _exchangeRateQueryService;
 
-        public CurrenciesController(AppDbContext dbContext)
+        public CurrenciesController(AppDbContext dbContext, ExchangeRateQueryService exchangeRateQueryService)
         {
             _dbContext = dbContext;
+            _exchangeRateQueryService = exchangeRateQueryService;
         }
 
         [HttpGet]
@@ -41,7 +42,7 @@ namespace CbrRatesTracker.Controllers
 
 
         [HttpGet("latest")]
-        public async Task<ActionResult<IEnumerable<ExchangeRateDTO>>> GetLatestRates()
+        public async Task<ActionResult<IEnumerable<ExchangeRateLatestDTO>>> GetLatestRates()
         {
             var maxDate = await _dbContext.ExchangeRates.MaxAsync(e => (DateOnly?)e.Date);
             if (maxDate == null)
@@ -51,10 +52,12 @@ namespace CbrRatesTracker.Controllers
 
             var exchangeRates = await _dbContext.ExchangeRates
                 .Where(e => e.Date == maxDate)
-                .Select(e => new ExchangeRateDTO(
-                    e.Date,
-                    e.Nominal,
-                    e.Value,
+                .Select(e => new ExchangeRateLatestDTO(
+                    new ExchangeRateDTO(
+                        e.Date,
+                        e.Nominal,
+                        e.Value
+                    ),
                     new CurrencyDTO(
                         e.Currency.CharCode,
                         e.Currency.NumCode,
@@ -76,51 +79,13 @@ namespace CbrRatesTracker.Controllers
         [HttpGet("{code}/history")]
         public async Task<ActionResult<ExchangeRateHistoryDTO>> GetCurrencyHistory(string code, [FromQuery(Name = "from")] string fromString, [FromQuery(Name = "to")] string toString)
         {
-            //TODO
+            var result = await _exchangeRateQueryService.GetValidatedDataAsync(code, fromString, toString);
+            if (!result.IsSuccess)
+            {
+                return MapError(result.Error!.Value);
+            }
 
-            //if (!DateOnly.TryParse(fromString, CultureInfo.GetCultureInfo("ru-RU"), out DateOnly from))
-            //    return BadRequest("Invalid 'from' date format. Please use 'dd.MM.yyyy'.");
-            //if (!DateOnly.TryParse(toString, CultureInfo.GetCultureInfo("ru-RU"), out DateOnly to))
-            //    return BadRequest("Invalid 'to' date format. Please use 'dd.MM.yyyy'.");
-
-            //var currencyExists = await _dbContext.Currencies.AnyAsync(c => c.CharCode == code);
-            //if (!currencyExists)
-            //    return NotFound($"Currency with code '{code}' not found.");
-
-            //if (from > to)
-            //    return BadRequest("Incorrect date range.");
-
-            //var minDate = await _dbContext.ExchangeRates.Where(e => e.Currency.CharCode == code).MinAsync(e => (DateOnly?)e.Date);
-            //var maxDate = await _dbContext.ExchangeRates.Where(e => e.Currency.CharCode == code).MaxAsync(e => (DateOnly?)e.Date);
-
-            //if (minDate == null || maxDate == null)
-            //    return NotFound("No exchange rates found.");
-
-            //if (from < minDate)
-            //    from = (DateOnly)minDate;
-            //if (to > maxDate)
-            //    to = (DateOnly)maxDate;
-
-            //var rates = await _dbContext.ExchangeRates
-            //    .Where(e => e.Currency.CharCode == code && e.Date >= from && e.Date <= to)
-            //    .Select(e => new ExchangeRateDTO(
-            //        e.Date,
-            //        e.Nominal,
-            //        e.Value,
-            //        new CurrencyDTO(
-            //            e.Currency.CharCode,
-            //            e.Currency.NumCode,
-            //            e.Currency.Name
-            //        )
-            //    ))
-            //    .AsNoTracking()
-            //    .ToListAsync();
-
-            //if (!rates.Any())
-            //    return NotFound("No exchange rates found.");
-
-            var rateHistoryDTO = new ExchangeRateHistoryDTO(code, from, to, rates);
-
+            var rateHistoryDTO = new ExchangeRateHistoryDTO(code, result.From, result.To, result.Rates);
             return Ok(rateHistoryDTO);
         }
 
@@ -128,54 +93,40 @@ namespace CbrRatesTracker.Controllers
         [HttpGet("{code}/stats")]
         public async Task<ActionResult<ExchangeRateStatsDTO>> GetCurrencyStats(string code, [FromQuery(Name = "from")] string fromString, [FromQuery(Name = "to")] string toString)
         {
-            //TODO
+            var result = await _exchangeRateQueryService.GetValidatedDataAsync(code, fromString, toString);
+            if (!result.IsSuccess)
+            {
+                return MapError(result.Error!.Value);
+            }
 
-            //if (!DateOnly.TryParse(fromString, CultureInfo.GetCultureInfo("ru-RU"), out DateOnly from))
-            //    return BadRequest("Invalid 'from' date format. Please use 'dd.MM.yyyy'.");
-            //if (!DateOnly.TryParse(toString, CultureInfo.GetCultureInfo("ru-RU"), out DateOnly to))
-            //    return BadRequest("Invalid 'to' date format. Please use 'dd.MM.yyyy'.");
+            var max = result.Rates.Max(e => e.Value / e.Nominal);
+            var min = result.Rates.Min(e => e.Value / e.Nominal);
+            var average = result.Rates.Average(e => e.Value / e.Nominal);
 
-            //var currencyExists = await _dbContext.Currencies.AnyAsync(c => c.CharCode == code);
-            //if (!currencyExists)
-            //    return NotFound($"Currency with code '{code}' not found.");
+            var rateStatsDTO = new ExchangeRateStatsDTO(result.From, result.To, max, min, average);
+            return Ok(rateStatsDTO);
+        }
 
-            //if (from > to)
-            //    return BadRequest("Incorrect date range.");
 
-            //var minDate = await _dbContext.ExchangeRates.Where(e => e.Currency.CharCode == code).MinAsync(e => (DateOnly?)e.Date);
-            //var maxDate = await _dbContext.ExchangeRates.Where(e => e.Currency.CharCode == code).MaxAsync(e => (DateOnly?)e.Date);
+        private ActionResult MapError(RateQueryError error)
+        {
+            switch (error)
+            {
+                case RateQueryError.InvalidDateFormat:
+                    return BadRequest("Invalid date format. Please use dd.MM.yyyy.");
 
-            //if (minDate == null || maxDate == null)
-            //    return NotFound("No exchange rates found.");
+                case RateQueryError.InvalidDateRange:
+                    return BadRequest("'from' date must be less than or equal to 'to' date.");
 
-            //if (from < minDate)
-            //    from = (DateOnly)minDate;
-            //if (to > maxDate)
-            //    to = (DateOnly)maxDate;
+                case RateQueryError.CurrencyNotFound:
+                    return NotFound("Currency not found.");
 
-            //var rates = await _dbContext.ExchangeRates
-            //    .Where(e => e.Currency.CharCode == code && e.Date >= from && e.Date <= to)
-            //    .Select(e => new ExchangeRateDTO(
-            //        e.Date,
-            //        e.Nominal,
-            //        e.Value,
-            //        new CurrencyDTO(
-            //            e.Currency.CharCode,
-            //            e.Currency.NumCode,
-            //            e.Currency.Name
-            //        )
-            //    ))
-            //    .AsNoTracking()
-            //    .ToListAsync();
+                case RateQueryError.NoRatesFound:
+                    return NotFound("No exchange rates found.");
 
-            //if (!rates.Any())
-            //    return NotFound("No exchange rates found.");
-
-            var max = rates.Max(e => e.Value / e.Nominal);
-            var min = rates.Min(e => e.Value / e.Nominal);
-            var average = rates.Average(e => e.Value / e.Nominal);
-
-            return new ExchangeRateStatsDTO(from, to, max, min, average);
+                default:
+                    return StatusCode(StatusCodes.Status500InternalServerError, "Unexpected error while processing the request.");
+            }
         }
     }
 }
