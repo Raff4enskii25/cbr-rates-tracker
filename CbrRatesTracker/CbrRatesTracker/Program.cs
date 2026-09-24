@@ -33,6 +33,7 @@ namespace CbrRatesTracker
                 
                 builder.Services.AddHttpClient<CbrIntegration.CbrClientService>();
                 builder.Services.AddScoped<Services.ExchangeRateUpdateService>();
+                builder.Services.AddScoped<Services.ExchangeRateQueryService>();
 
                 builder.Services.AddHostedService<BackgroundJobs.ExchangeRateUpdateJob>();
 
