@@ -1,3 +1,5 @@
+using CbrRatesTracker.Interfaces;
+using CbrRatesTracker.Services;
 using Microsoft.EntityFrameworkCore;
 using Npgsql.EntityFrameworkCore.PostgreSQL;
 using Serilog;
@@ -34,6 +36,9 @@ namespace CbrRatesTracker
                 builder.Services.AddHttpClient<CbrIntegration.CbrClientService>();
                 builder.Services.AddScoped<Services.ExchangeRateUpdateService>();
                 builder.Services.AddScoped<Services.ExchangeRateQueryService>();
+                builder.Services.AddScoped<Services.AlertCreateService>();
+                builder.Services.AddScoped<Services.AlertCheckService>();
+                builder.Services.AddTransient<INotificationService, Services.EmailSenderService>();
 
                 builder.Services.AddHostedService<BackgroundJobs.ExchangeRateUpdateJob>();
 
