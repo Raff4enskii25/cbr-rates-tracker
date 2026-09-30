@@ -28,7 +28,19 @@ namespace CbrRatesTracker.BackgroundJobs
                         using (var scope = _scopeFactory.CreateScope())
                         {
                             var ratesUpdateService = scope.ServiceProvider.GetRequiredService<ExchangeRateUpdateService>();
-                            await ratesUpdateService.UpdateRatesAsync();
+                            var alertCheckService = scope.ServiceProvider.GetRequiredService<AlertCheckService>();
+                            var rates = await ratesUpdateService.UpdateRatesAsync();
+                            if (rates != null && rates.Any())
+                            {
+                                try
+                                {
+                                    await alertCheckService.CheckAlertsIsTriggeredAsync(rates);
+                                }
+                                catch(Exception ex)
+                                {
+                                    _logger.LogError(ex, "An error occured while checking alert triggers.");
+                                }
+                            }
                         }
                     }
 

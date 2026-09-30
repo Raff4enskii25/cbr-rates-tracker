@@ -1,5 +1,6 @@
 ﻿using CbrRatesTracker.CbrIntegration;
 using CbrRatesTracker.Data;
+using CbrRatesTracker.DTO;
 using CbrRatesTracker.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,13 +19,13 @@ namespace CbrRatesTracker.Services
             _logger = logger;
         }
 
-        public async Task UpdateRatesAsync()
+        public async Task<IEnumerable<ExchangeRateLatestDTO>?> UpdateRatesAsync()
         {
             var latestRates = await _cbrClientService.GetLatestRatesAsync();
             if(latestRates.Count == 0)
             {
                 _logger.LogWarning("No rates received from CBR. Skipping update.");
-                return;
+                return null;
             }
 
             var currencies = await _dbContext.Currencies.ToDictionaryAsync(c => c.CharCode, c => c);
@@ -48,6 +49,12 @@ namespace CbrRatesTracker.Services
 
             await _dbContext.SaveChangesAsync();
             _logger.LogInformation($"Exchange rates update completed on {DateTime.Now}.");
+
+            var rates = latestRates.Select(r => new ExchangeRateLatestDTO(
+                new ExchangeRateDTO(r.Date, r.Nominal, r.Value),
+                new CurrencyDTO(r.CharCode, r.NumCode, r.Name))
+            );
+            return rates;
         }
 
 
