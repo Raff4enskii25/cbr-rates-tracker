@@ -29,5 +29,11 @@ namespace CbrRatesTracker.Models
             if(email != null)
                 Email = email;
         }
+
+        public void SetAlertIsTriggered(DateOnly date)
+        {
+            IsTriggered = true;
+            TriggeredAt = date;
+        }
     }
 }
