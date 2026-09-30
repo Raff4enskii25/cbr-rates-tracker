@@ -39,6 +39,9 @@ namespace CbrRatesTracker.Migrations
                     b.Property<int>("Direction")
                         .HasColumnType("integer");
 
+                    b.Property<string>("Email")
+                        .HasColumnType("text");
+
                     b.Property<bool>("IsTriggered")
                         .HasColumnType("boolean");
 

@@ -12,17 +12,22 @@ namespace CbrRatesTracker.Models
         public bool IsTriggered { get; private set; }
         public DateOnly CreatedAt { get; private set; }
         public DateOnly? TriggeredAt { get; private set; }
+        public string? Email { get; private set; }
 
         private Alert() { }
 
-        public Alert(int currencyId, decimal thresholdValue, Direction direction)
+        public Alert(Currency currency, decimal thresholdValue, Direction direction, string? email)
         {
-            CurrencyId = currencyId;
+            Currency = currency;
+            CurrencyId = currency.Id;
             ThresholdValue = thresholdValue;
             Direction = direction;
             IsTriggered = false;
             CreatedAt = DateOnly.FromDateTime(DateTime.UtcNow);
             TriggeredAt = null;
+            
+            if(email != null)
+                Email = email;
         }
     }
 }
