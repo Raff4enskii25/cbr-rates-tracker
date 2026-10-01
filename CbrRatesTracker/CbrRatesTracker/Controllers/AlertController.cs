@@ -10,12 +10,12 @@ namespace CbrRatesTracker.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AlertController : ControllerBase
+    public class AlertsController : ControllerBase
     {
         private readonly AppDbContext _dbContext;
         private readonly AlertCreateService _service;
 
-        public AlertController(AppDbContext dbContext, AlertCreateService service)
+        public AlertsController(AppDbContext dbContext, AlertCreateService service)
         {
             _dbContext = dbContext;
             _service = service;
