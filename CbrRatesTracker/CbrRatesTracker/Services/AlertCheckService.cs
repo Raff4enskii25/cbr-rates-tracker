@@ -64,7 +64,7 @@ namespace CbrRatesTracker.Services
                         {
                             await _notificationService.SendMessageAsync(
                                 alert.Email,
-                                $"Alert for {alert.Currency.Name} triggered at {alert.TriggeredAt}.\n",
+                                $"Alert for {alert.Currency.Name} triggered at {alert.TriggeredAt}.",
                                 $"Dear user, your alert for {alert.Currency.Name} triggered at {alert.TriggeredAt}.\n" +
                                 $"Current exchange rate for {alert.Currency.Name} is {rate}.\n" +
                                 $"Threshold value for alert was {alert.ThresholdValue}."

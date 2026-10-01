@@ -25,7 +25,7 @@ namespace CbrRatesTracker.Services
             message.From.Add(new MailboxAddress(senderName, senderEmail));
             message.To.Add(new MailboxAddress("", recipient));
             message.Subject = subject;
-            message.Body = new TextPart("Html") { Text = body };
+            message.Body = new TextPart("Plain") { Text = body };
 
             using var client = new SmtpClient();
 
